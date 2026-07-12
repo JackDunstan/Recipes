@@ -106,14 +106,14 @@
       height: calc(100vh - 57px);
       overflow-y: auto;
     }
-    .detail-hero {
+    .detail-image {
       width: 100%;
       aspect-ratio: 16/9;
       object-fit: cover;
       display: block;
       background: var(--border);
     }
-    .detail-title {
+    .detail-name {
       font-family: var(--font-serif);
       font-size: 1.8rem;
       line-height: 1.1;
@@ -128,40 +128,68 @@
       color: var(--fg-muted);
     }
     .detail-meta strong { color: var(--accent); }
-    .detail-section-label {
+    .detail-meta a { color: inherit; }
+    .section-label {
       font-size: 0.6rem;
       letter-spacing: 0.15em;
       text-transform: uppercase;
       color: var(--fg-muted);
       margin-bottom: 0.6rem;
     }
-    .ingredient-list { display: flex; flex-direction: column; gap: 0.3rem; }
+    .ingredient-list { display: flex; flex-direction: column; gap: 0.3rem; list-style: none; padding: 0; margin: 0; }
     .ingredient-item {
       font-size: 0.8rem;
       padding: 0.3rem 0;
       border-bottom: 1px solid var(--border);
-      display: flex;
-      gap: 0.5rem;
     }
     .ingredient-item:last-child { border-bottom: none; }
-    .ing-qty { color: var(--accent); min-width: 80px; font-size: 0.75rem; }
-    .method-body {
+    .ingredient-item.section-header {
+      color: var(--accent);
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      border-bottom: none;
+      padding-top: 0.8rem;
+    }
+    .ingredient-item.section-header:first-child { padding-top: 0.3rem; }
+    .directions-list { display: flex; flex-direction: column; gap: 0.8rem; list-style: none; padding: 0; margin: 0; }
+    .direction-item {
       font-size: 0.82rem;
       line-height: 1.75;
       color: var(--fg);
-    }
-    .method-step { margin-bottom: 0.8rem; }
-    .step-num { color: var(--accent); margin-right: 0.4rem; }
-    .empty-state {
       display: flex;
+      gap: 0.4rem;
+    }
+    .direction-num { color: var(--accent); flex-shrink: 0; }
+    .notes-text {
+      font-size: 0.82rem;
+      line-height: 1.75;
+      color: var(--fg-muted);
+      margin: 0;
+    }
+    .recipe-count {
+      font-size: 0.6rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--fg-muted);
+      flex-shrink: 0;
+    }
+    .detail-empty {
+      display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
       height: 100%;
       color: var(--fg-muted);
+      gap: 0.5rem;
+    }
+    .detail-empty-icon { font-size: 2rem; opacity: 0.5; }
+    .detail-empty-text {
       font-size: 0.7rem;
       letter-spacing: 0.1em;
       text-transform: uppercase;
     }
+    .hidden { display: none !important; }
   </style>
 </head>
 <body>
