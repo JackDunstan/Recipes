@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recipes — Home</title>
+  <meta property="og:title" content="Recipes — Home">
+  <meta property="og:description" content="Kitchen recipe library — search, filter and cook.">
+  <meta property="og:type" content="website">
+  <link rel="stylesheet" href="/assets/css/shared.css">
+  <style>
+    /* filter-bar on this page has a backdrop blur override */
+    .filter-bar {
+      background: rgba(10,10,10,0.85);
+      -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(10px);
+    }
+    .search-bar {
+      padding: 0.6rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      background: rgba(10,10,10,0.85);
+      -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(10px);
+    }
+    .search-bar { display: flex; align-items: center; gap: 0.75rem; }
+    .search-bar .search-input { width: 100%; max-width: 400px; }
+    .sort-select {
+      background: var(--surface);
+      color: var(--fg);
+      border: 1px solid var(--border);
+      font-size: 0.7rem;
+      letter-spacing: 0.04em;
+      padding: 0.4rem 0.6rem;
+      flex-shrink: 0;
+    }
+
+    #status {
+      padding: 0.45rem 1.5rem;
+      font-size: 0.6rem;
+      letter-spacing: 0.08em;
+      color: var(--fg-muted);
+      border-bottom: 1px solid var(--border);
+      background: rgba(10,10,10,0.85);
+    }
+
+    /* ── Split layout ── */
+    .main {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: calc(100vh - 160px);
+    }
+    @media (max-width: 700px) {
+      .detail-panel { display: none; }
+      .detail-panel.visible { display: flex; }
+    }
+
+    /* ── Recipe list ── */
+    .recipe-list { border-right: 1px solid var(--border); overflow-y: auto; }
+    .recipe-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.15s;
+      position: relative;
+    }
+    .recipe-item:hover  { background: var(--surface); }
+    .recipe-item.active { background: var(--surface2); }
+    .recipe-item.active::after {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 2px;
+      background: var(--accent);
+    }
+    .recipe-info { display: flex; flex-direction: column; }
+    .recipe-name {
+      font-family: var(--font-serif);
+      font-size: 1rem;
+      margin-bottom: 0.2rem;
+      line-height: 1.2;
+    }
+    .recipe-meta {
+      font-size: 0.6rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--fg-muted);
+    }
+    .recipe-thumb {
+      width: 48px; height: 48px;
+      object-fit: cover;
+      flex-shrink: 0;
+      background: var(--border);
+    }
+
+    /* ── Detail panel ── */
+    .detail-panel {
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      position: sticky;
+      top: 57px;
+      height: calc(100vh - 57px);
+      overflow-y: auto;
+    }
+    .detail-hero {
+      width: 100%;
+      aspect-ratio: 16/9;
+      object-fit: cover;
+      display: block;
+      background: var(--border);
+    }
+    .detail-title {
+      font-family: var(--font-serif);
+      font-size: 1.8rem;
+      line-height: 1.1;
+    }
+    .detail-meta {
+      display: flex;
+      gap: 1.5rem;
+      flex-wrap: wrap;
+      font-size: 0.65rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--fg-muted);
+    }
+    .detail-meta strong { color: var(--accent); }
+    .detail-section-label {
+      font-size: 0.6rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--fg-muted);
+      margin-bottom: 0.6rem;
+    }
+    .ingredient-list { display: flex; flex-direction: column; gap: 0.3rem; }
+    .ingredient-item {
+      font-size: 0.8rem;
+      padding: 0.3rem 0;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      gap: 0.5rem;
+    }
+    .ingredient-item:last-child { border-bottom: none; }
+    .ing-qty { color: var(--accent); min-width: 80px; font-size: 0.75rem; }
+    .method-body {
+      font-size: 0.82rem;
+      line-height: 1.75;
+      color: var(--fg);
+    }
+    .method-step { margin-bottom: 0.8rem; }
+    .step-num { color: var(--accent); margin-right: 0.4rem; }
+    .empty-state {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: var(--fg-muted);
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <a href="/" class="back">← Home</a>
+  <span class="header-title">Recipes</span>
+  <div class="header-right"></div>
+</header>
+
+<div class="filter-bar">
+  <button type="button" class="filter-btn active" data-filter="all" onclick="setFilter('all')">All</button>
+  <button type="button" class="filter-btn" data-filter="bread" onclick="setFilter('bread')">Bread</button>
+  <button type="button" class="filter-btn" data-filter="soup" onclick="setFilter('soup')">Soup</button>
+  <button type="button" class="filter-btn" data-filter="pasta" onclick="setFilter('pasta')">Pasta</button>
+  <button type="button" class="filter-btn" data-filter="meat" onclick="setFilter('meat')">Meat</button>
+  <button type="button" class="filter-btn" data-filter="fish" onclick="setFilter('fish')">Fish</button>
+  <button type="button" class="filter-btn" data-filter="curry" onclick="setFilter('curry')">Curry</button>
+  <button type="button" class="filter-btn" data-filter="baking" onclick="setFilter('baking')">Baking</button>
+</div>
+
+<div class="search-bar">
+  <input class="search-input" type="text" placeholder="Search recipes or ingredients…" id="search-input" oninput="onSearch()" />
+  <select class="sort-select" id="sort-select" title="Sort recipes" aria-label="Sort recipes" onchange="onSortChange()">
+    <option value="name">Sort: Name (A–Z)</option>
+    <option value="date-desc">Sort: Date added (newest)</option>
+    <option value="date-asc">Sort: Date added (oldest)</option>
+  </select>
+</div>
+
+<div id="status"></div>
+
+<div id="loading">Loading…</div>
+
+<div class="main hidden" id="main">
+  <div class="recipe-list" id="recipe-list"></div>
+  <div class="detail-panel" id="detail-panel">
+    <div class="detail-empty">
+      <div class="detail-empty-icon">◎</div>
+      <div class="detail-empty-text">Select a recipe</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const MD_FILES = [
+  'aussie-meat-pie',
+  'basic-no-knead-bread',
+  'bloody-mary-pork-scotch-eggs',
+  'broccoli-and-stilton-soup',
+  'broccoli-slaw',
+  'chinese-steamed-fish-with-ginger-and-spring-onions',
+  'chongqing_spicy_beef_noodle_soup',
+  'confit-rare-breed-pork-belly-with-lentils-vinaigrette',
+  'creamy-lemon-garlic-chicken-with-asparagus-30-minutes',
+  'creamy_vegetarian_boscaiola',
+  'dry_fried_green_beans',
+  'felicity-cloake-s-perfect-vegetarian-chilli',
+  'felicity-cloakes-recipe-for-real-rice-pudding',
+  'five-ingredient-simple-green-pasta-salad',
+  'ginger-glazed-ham',
+  'heston-blumenthal-s-slow-roasted-rib-of-beef-with-bone-marrow-sauce',
+  'homemade-authentic-pizza',
+  'homemade-candied-peel',
+  'how-to-cook-leek-and-potato-soup',
+  'how-to-cook-the-perfect-colcannon',
+  'how-to-cook-the-perfect-irish-barmbrack',
+  'how-to-cook-the-perfect-laksa',
+  'how-to-cook-the-perfect-souvlaki',
+  'how-to-cook-the-perfect-sticky-orange-cake',
+  'how-to-make-a-cheats-ricotta-cheese',
+  'how-to-make-chicken-korma',
+  'how-to-make-perfect-bolognese',
+  'how-to-make-spaghetti-carbonara',
+  'how-to-make-the-hummus-of-your-life-according-to-one-of-the-countrys-best-middle-eastern-chefs',
+  'how-to-make-the-perfect-gougeres',
+  'joshuas-multipurpose-dough',
+  'laksa-noodle-soup',
+  'leftover-roast-lamb-vindaloo',
+  'pan-seared-duck-breast-with-orange-pan-sauce',
+  'perfect-chicken-adobo',
+  'perfect-massaman',
+  'pork-scotch-carnitas',
+  'recipetin-eats-x-good-food-how-to-make-the-ultimate-meat-pie',
+  'slow_roasted_roma_tomato_pasta',
+  'spinach-and-ricotta-pasta',
+  'tangzhong',
+  'tuna-mornay-bake',
+  'vodka-marinated-steak',
+];
+
+// Keyword-based category matching
+const CATEGORY_KEYWORDS = {
+  bread:  ['bread', 'dough', 'barmbrack', 'tangzhong', 'gougere', 'pizza'],
+  soup:   ['soup', 'laksa', 'chilli', 'colcannon'],
+  pasta:  ['pasta', 'spaghetti', 'carbonara', 'bolognese', 'linguine'],
+  meat:   ['steak', 'beef', 'pork', 'ham', 'chicken', 'duck', 'meat pie', 'scotch egg', 'souvlaki', 'adobo'],
+  fish:   ['fish', 'prawn', 'seafood'],
+  curry:  ['curry', 'massaman', 'korma', 'laksa'],
+  baking: ['cake', 'pudding', 'barmbrack', 'candied', 'ricotta', 'gougere'],
+};
+
+function recipeCategory(recipe) {
+  const text = (recipe.recipe_name + ' ' + recipe.ingredients_summary.join(' ')).toLowerCase();
+  const tagText = (
+    (recipe.metadata?.categories || []).join(' ') + ' ' +
+    (recipe.metadata?.tags || []).join(' ')
+  ).toLowerCase();
+  for (const [cat, keywords] of Object.entries(CATEGORY_KEYWORDS)) {
+    if (keywords.some(k => text.includes(k) || tagText.includes(k))) return cat;
+  }
+  return 'other';
+}
+
+let RECIPES = [];
+let currentFilter = 'all';
+let searchQuery = '';
+let selectedSlug = null;
+let currentSort = 'name';
+
+// ─── Markdown + frontmatter parsing ────────────────────────────────────────────
+// Frontmatter values are written as JSON literals (json.dumps on the Python
+// side), so every value is valid YAML flow syntax AND directly JSON.parse-able.
+function parseFrontmatter(text) {
+  const match = text.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
+  if (!match) return { meta: {}, body: text };
+  const [, fmText, body] = match;
+  const meta = {};
+  fmText.split('\n').forEach(line => {
+    const idx = line.indexOf(':');
+    if (idx === -1) return;
+    const key = line.slice(0, idx).trim();
+    const raw = line.slice(idx + 1).trim();
+    if (raw === '') { meta[key] = null; return; }
+    try { meta[key] = JSON.parse(raw); }
+    catch { meta[key] = raw; }
+  });
+  return { meta, body };
+}
+
+function parseSections(body) {
+  const sections = {};
+  let current = null;
+  for (const line of body.split('\n')) {
+    const h2 = line.match(/^##\s+(.*)/);
+    if (h2) { current = h2[1].trim().toLowerCase(); sections[current] = []; continue; }
+    if (line.match(/^#\s+/)) continue; // title line
+    if (current) sections[current].push(line);
+  }
+  Object.keys(sections).forEach(k => {
+    const arr = sections[k];
+    while (arr.length && arr[0].trim() === '') arr.shift();
+    while (arr.length && arr[arr.length - 1].trim() === '') arr.pop();
+  });
+  return sections;
+}
+
+function parseRecipeMarkdown(text, slug) {
+  const { meta, body } = parseFrontmatter(text);
+  const sections = parseSections(body);
+
+  const ingredients = (sections['ingredients'] || []).map(line => {
+    const bold = line.match(/^\*\*(.*)\*\*$/);
+    if (bold) return bold[1];
+    const bullet = line.match(/^-\s+(.*)/);
+    return bullet ? bullet[1] : line;
+  }).filter(l => l.trim() !== '');
+
+  const directions = (sections['directions'] || []).map(line => {
+    const numbered = line.match(/^\d+\.\s+(.*)/);
+    return numbered ? numbered[1] : line;
+  }).filter(l => l.trim() !== '');
+
+  const notes = (sections['notes'] || []).map(line => {
+    const bullet = line.match(/^-\s+(.*)/);
+    return bullet ? bullet[1] : line;
+  }).filter(l => l.trim() !== '');
+
+  const storage = (sections['storage'] || []).join(' ').trim();
+  const description = (sections['description'] || []).join(' ').trim();
+
+  return {
+    recipe_name: meta.recipe_name || '',
+    metadata: {
+      rating: meta.rating ?? null,
+      categories: meta.categories || [],
+      tags: meta.tags || [],
+      source_file: meta.source_file ?? null,
+      date_added: meta.date_added ?? null,
+      source_url: meta.source_url ?? null,
+      author: meta.author ?? null,
+      image: meta.image ?? null,
+      servings: meta.servings ?? null,
+      prep_time: meta.prep_time ?? null,
+      cook_time: meta.cook_time ?? null,
+      total_time: meta.total_time ?? null,
+    },
+    nutrition: meta.nutrition || {},
+    ingredients_summary: ingredients,
+    directions,
+    notes,
+    storage,
+    description,
+    slug,
+  };
+}
+
+// ─── Load data ────────────────────────────────────────────────────────────────
+async function init() {
+  try {
+    const results = await Promise.all(
+      MD_FILES.map(slug =>
+        fetch(`/recipes/${slug}.md`)
+          .then(r => r.ok ? r.text() : null)
+          .then(text => text ? parseRecipeMarkdown(text, slug) : null)
+          .catch(() => null)
+      )
+    );
+
+    RECIPES = results
+      .filter(Boolean)
+      .sort((a, b) => a.recipe_name.localeCompare(b.recipe_name));
+
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('main').classList.remove('hidden');
+
+    renderList();
+  } catch(e) {
+    document.getElementById('loading').textContent = 'Error loading recipes — check console';
+    console.error(e);
+  }
+}
+
+// ─── Filter & search ──────────────────────────────────────────────────────────
+function getFiltered() {
+  let list = RECIPES;
+
+  if (currentFilter !== 'all') {
+    list = list.filter(r => recipeCategory(r) === currentFilter);
+  }
+
+  if (searchQuery) {
+    const q = searchQuery.toLowerCase();
+    list = list.filter(r =>
+      r.recipe_name.toLowerCase().includes(q) ||
+      r.ingredients_summary.some(i => i.toLowerCase().includes(q))
+    );
+  }
+
+  list = list.slice();
+  if (currentSort === 'date-desc') {
+    list.sort((a, b) =>
+      (b.metadata?.date_added || '').localeCompare(a.metadata?.date_added || '') ||
+      a.recipe_name.localeCompare(b.recipe_name)
+    );
+  } else if (currentSort === 'date-asc') {
+    list.sort((a, b) =>
+      (a.metadata?.date_added || '').localeCompare(b.metadata?.date_added || '') ||
+      a.recipe_name.localeCompare(b.recipe_name)
+    );
+  } else {
+    list.sort((a, b) => a.recipe_name.localeCompare(b.recipe_name));
+  }
+
+  return list;
+}
+
+// ─── Render list ──────────────────────────────────────────────────────────────
+function renderList() {
+  const filtered = getFiltered();
+  const list = document.getElementById('recipe-list');
+  list.innerHTML = '';
+
+  document.getElementById('status').textContent =
+    `${filtered.length} of ${RECIPES.length} recipes`;
+
+  if (filtered.length === 0) {
+    list.innerHTML = `<div style="padding:2rem;color:var(--fg-muted);font-size:0.75rem;text-align:center">No recipes match</div>`;
+    return;
+  }
+
+  filtered.forEach(recipe => {
+    const item = document.createElement('div');
+    item.className = `recipe-item${selectedSlug === recipe.slug ? ' active' : ''}`;
+    item.dataset.slug = recipe.slug;
+
+    const ingredientCount = recipe.ingredients_summary.filter(i =>
+      !i.toUpperCase().includes('FOR THE') && !i.toUpperCase().startsWith('FOR ')
+    ).length;
+
+    const thumbPath = recipe.metadata?.image
+      ? `/recipes/${recipe.metadata.image}`
+      : null;
+
+    item.innerHTML = `
+      <div class="recipe-info">
+        <div class="recipe-name">${recipe.recipe_name}</div>
+      </div>
+      ${thumbPath
+        ? `<img class="recipe-thumb" src="${thumbPath}" alt="" loading="lazy">`
+        : `<div class="recipe-count">${ingredientCount} ingr.</div>`
+      }
+    `;
+
+    item.addEventListener('click', () => selectRecipe(recipe.slug));
+    list.appendChild(item);
+  });
+}
+
+// ─── Select recipe ────────────────────────────────────────────────────────────
+function selectRecipe(slug) {
+  selectedSlug = slug;
+  const recipe = RECIPES.find(r => r.slug === slug);
+  if (!recipe) return;
+
+  document.querySelectorAll('.recipe-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.slug === slug);
+  });
+
+  renderDetail(recipe);
+
+  // Mobile: show detail panel
+  document.getElementById('detail-panel').classList.add('visible');
+}
+
+function renderDetail(recipe) {
+  const imagePath = recipe.metadata?.image
+    ? `/recipes/${recipe.metadata.image}`
+    : null;
+  const sourceUrl = recipe.metadata?.source_url || null;
+  const author = recipe.metadata?.author || null;
+  const servings = recipe.metadata?.servings || null;
+  const cookTime = recipe.metadata?.cook_time || null;
+  const prepTime = recipe.metadata?.prep_time || null;
+
+  const metaParts = [];
+  if (servings) metaParts.push(servings);
+  if (prepTime) metaParts.push(`Prep ${prepTime}`);
+  if (cookTime) metaParts.push(`Cook ${cookTime}`);
+  if (author && sourceUrl) metaParts.push(`<a href="${sourceUrl}" target="_blank">${author} ↗</a>`);
+  else if (author) metaParts.push(author);
+
+  const ingredientHTML = recipe.ingredients_summary.map(ing => {
+    const isHeader = /^(FOR |for the |FOR THE )/i.test(ing.trim());
+    if (isHeader) {
+      return `<li class="ingredient-item section-header">${ing.replace(/:$/, '')}</li>`;
+    }
+    return `<li class="ingredient-item">${ing}</li>`;
+  }).join('');
+
+  const directionHTML = recipe.directions.map((step, i) => `
+    <li class="direction-item">
+      <span class="direction-num">${String(i + 1).padStart(2, '0')}.</span>
+      <span class="direction-text">${step}</span>
+    </li>
+  `).join('');
+
+  const hasStorage = recipe.storage && recipe.storage.trim().length > 0;
+  const hasNotes = recipe.notes && recipe.notes.length > 0;
+
+  document.getElementById('detail-panel').innerHTML = `
+    ${imagePath ? `<img class="detail-image" src="${imagePath}" alt="${recipe.recipe_name}" loading="lazy">` : ''}
+
+    <div>
+      <div class="detail-name">${recipe.recipe_name}</div>
+      ${metaParts.length > 0 ? `<div class="detail-meta">${metaParts.join(' · ')}</div>` : ''}
+    </div>
+
+    <div>
+      <div class="section-label">Ingredients</div>
+      <ul class="ingredient-list">${ingredientHTML}</ul>
+    </div>
+
+    ${recipe.directions.length > 0 ? `
+    <div>
+      <div class="section-label">Method</div>
+      <ol class="directions-list">${directionHTML}</ol>
+    </div>
+    ` : ''}
+
+    ${hasNotes ? `
+    <div>
+      <div class="section-label">Notes</div>
+      <p class="notes-text">${recipe.notes.join(' ')}</p>
+    </div>
+    ` : ''}
+
+    ${hasStorage ? `
+    <div>
+      <div class="section-label">Storage</div>
+      <p class="notes-text">${recipe.storage}</p>
+    </div>
+    ` : ''}
+  `;
+}
+
+// ─── Controls ─────────────────────────────────────────────────────────────────
+function setFilter(filter) {
+  currentFilter = filter;
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.filter === filter);
+  });
+  renderList();
+}
+
+function onSearch() {
+  searchQuery = document.getElementById('search-input').value.trim();
+  renderList();
+}
+
+function onSortChange() {
+  currentSort = document.getElementById('sort-select').value;
+  renderList();
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+init();
+</script>
+</body>
+</html>
