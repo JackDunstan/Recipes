@@ -5,34 +5,77 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Recipes — Home</title>
   <meta property="og:title" content="Recipes — Home">
-  <meta property="og:description" content="Kitchen recipe library — search, filter and cook.">
+  <meta property="og:description" content="Kitchen recipe library and cocktail recipes matched to your bar inventory.">
   <meta property="og:type" content="website">
   <link rel="stylesheet" href="/assets/css/shared.css">
   <style>
-    /* filter-bar on this page has a backdrop blur override */
     .filter-bar {
       background: rgba(10,10,10,0.85);
       -webkit-backdrop-filter: blur(10px);
       backdrop-filter: blur(10px);
     }
-    .search-bar {
-      padding: 0.6rem 1.5rem;
-      border-bottom: 1px solid var(--border);
-      background: rgba(10,10,10,0.85);
-      -webkit-backdrop-filter: blur(10px);
-      backdrop-filter: blur(10px);
-    }
-    .search-bar { display: flex; align-items: center; gap: 0.75rem; }
-    .search-bar .search-input { width: 100%; max-width: 400px; }
-    .sort-select {
-      background: var(--surface);
-      color: var(--fg);
+
+    /* ── Mode toggle ── */
+    .mode-toggle {
+      display: flex;
       border: 1px solid var(--border);
-      font-size: 0.7rem;
-      letter-spacing: 0.04em;
-      padding: 0.4rem 0.6rem;
-      flex-shrink: 0;
     }
+    .mode-btn {
+      padding: 0.3rem 0.7rem;
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      background: var(--surface);
+      color: var(--fg-muted);
+      border: none;
+      cursor: pointer;
+      transition: all 0.15s;
+      font-family: var(--font-mono);
+    }
+    .mode-btn + .mode-btn { border-left: 1px solid var(--border); }
+    .mode-btn.active { background: var(--accent-dim); color: var(--accent); }
+
+    /* ── Serves toggle ── */
+    .serves-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--fg-muted);
+    }
+    .serves-btn {
+      width: 28px; height: 28px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--fg-muted);
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+    .serves-btn.active {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-dim);
+    }
+
+    /* ── Status bars ── */
+    #inventory-status {
+      padding: 0.5rem 1.5rem;
+      font-size: 0.65rem;
+      letter-spacing: 0.08em;
+      color: var(--fg-muted);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    #inventory-status a { color: var(--accent); text-decoration: none; font-size: 0.6rem; }
 
     #status {
       padding: 0.45rem 1.5rem;
@@ -43,19 +86,44 @@
       background: rgba(10,10,10,0.85);
     }
 
+    /* ── Search bar ── */
+    .search-bar {
+      padding: 0.6rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      background: rgba(10,10,10,0.85);
+      -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(10px);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .search-bar .search-input { width: 100%; max-width: 400px; }
+    .sort-select {
+      background: var(--surface);
+      color: var(--fg);
+      border: 1px solid var(--border);
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      letter-spacing: 0.04em;
+      padding: 0.4rem 0.6rem;
+      flex-shrink: 0;
+    }
+
     /* ── Split layout ── */
     .main {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      min-height: calc(100vh - 160px);
+      min-height: calc(100vh - 120px);
     }
     @media (max-width: 700px) {
-      .detail-panel { display: none; }
-      .detail-panel.visible { display: flex; }
+      .right-panel { display: none; }
+      .right-panel.visible { display: flex !important; }
     }
 
-    /* ── Recipe list ── */
-    .recipe-list { border-right: 1px solid var(--border); overflow-y: auto; }
+    /* ── Left panel ── */
+    .left-panel { border-right: 1px solid var(--border); overflow-y: auto; }
+
+    /* ── Recipe list items ── */
     .recipe-item {
       display: flex;
       align-items: center;
@@ -82,21 +150,66 @@
       margin-bottom: 0.2rem;
       line-height: 1.2;
     }
-    .recipe-meta {
-      font-size: 0.6rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--fg-muted);
-    }
     .recipe-thumb {
       width: 48px; height: 48px;
       object-fit: cover;
       flex-shrink: 0;
       background: var(--border);
     }
+    .recipe-count {
+      font-size: 0.6rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--fg-muted);
+      flex-shrink: 0;
+    }
 
-    /* ── Detail panel ── */
-    .detail-panel {
+    /* ── Cocktail list items ── */
+    .cocktail-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.15s;
+      position: relative;
+    }
+    .cocktail-item:hover  { background: var(--surface); }
+    .cocktail-item.active { background: var(--surface2); }
+    .cocktail-item.active::after {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 2px;
+      background: var(--accent);
+    }
+    .cocktail-item.unavailable { opacity: 0.35; cursor: default; }
+    .cocktail-item.unavailable:hover { background: none; }
+    .cocktail-name {
+      font-family: var(--font-serif);
+      font-size: 1rem;
+      margin-bottom: 0.2rem;
+    }
+    .cocktail-meta {
+      font-size: 0.6rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--fg-muted);
+    }
+    .cocktail-badges { display: flex; gap: 0.4rem; align-items: center; }
+    .badge {
+      font-size: 0.55rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 0.2rem 0.4rem;
+      border: 1px solid var(--border);
+      color: var(--fg-muted);
+    }
+    .badge.missing { border-color: #3a1a1a; color: #8b4444; }
+
+    /* ── Right/detail panel ── */
+    .right-panel {
       padding: 2rem;
       display: flex;
       flex-direction: column;
@@ -126,8 +239,8 @@
       letter-spacing: 0.08em;
       text-transform: uppercase;
       color: var(--fg-muted);
+      margin-top: 0.5rem;
     }
-    .detail-meta strong { color: var(--accent); }
     .detail-meta a { color: inherit; }
     .section-label {
       font-size: 0.6rem;
@@ -152,6 +265,8 @@
       padding-top: 0.8rem;
     }
     .ingredient-item.section-header:first-child { padding-top: 0.3rem; }
+    .ingredient-item.missing { color: #8b4444; text-decoration: line-through; }
+    .ing-amount { color: var(--accent); }
     .directions-list { display: flex; flex-direction: column; gap: 0.8rem; list-style: none; padding: 0; margin: 0; }
     .direction-item {
       font-size: 0.82rem;
@@ -167,12 +282,19 @@
       color: var(--fg-muted);
       margin: 0;
     }
-    .recipe-count {
-      font-size: 0.6rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--fg-muted);
-      flex-shrink: 0;
+    .method-text {
+      font-size: 0.82rem;
+      line-height: 1.75;
+      color: var(--fg);
+      margin: 0;
+    }
+    .missing-tag {
+      display: inline-block;
+      font-size: 0.7rem;
+      padding: 0.2rem 0.5rem;
+      border: 1px solid #3a1a1a;
+      color: #8b4444;
+      margin: 0.15rem;
     }
     .detail-empty {
       display: flex;
@@ -196,22 +318,32 @@
 
 <header>
   <a href="/" class="back">← Home</a>
-  <span class="header-title">Recipes</span>
-  <div class="header-right"></div>
+  <span class="header-title" id="page-title">Recipes</span>
+  <div class="header-right">
+    <div class="serves-toggle hidden" id="serves-toggle">
+      <span>Serves</span>
+      <button class="serves-btn active" data-serves="1" onclick="setServes(1)">1</button>
+      <button class="serves-btn" data-serves="2" onclick="setServes(2)">2</button>
+    </div>
+    <div class="mode-toggle">
+      <button class="mode-btn active" data-mode="recipes" onclick="setMode('recipes')">Kitchen</button>
+      <button class="mode-btn" data-mode="cocktails" onclick="setMode('cocktails')">Cocktails</button>
+    </div>
+  </div>
 </header>
 
-<div class="filter-bar">
-  <button type="button" class="filter-btn active" data-filter="all" onclick="setFilter('all')">All</button>
-  <button type="button" class="filter-btn" data-filter="bread" onclick="setFilter('bread')">Bread</button>
-  <button type="button" class="filter-btn" data-filter="soup" onclick="setFilter('soup')">Soup</button>
-  <button type="button" class="filter-btn" data-filter="pasta" onclick="setFilter('pasta')">Pasta</button>
-  <button type="button" class="filter-btn" data-filter="meat" onclick="setFilter('meat')">Meat</button>
-  <button type="button" class="filter-btn" data-filter="fish" onclick="setFilter('fish')">Fish</button>
-  <button type="button" class="filter-btn" data-filter="curry" onclick="setFilter('curry')">Curry</button>
-  <button type="button" class="filter-btn" data-filter="baking" onclick="setFilter('baking')">Baking</button>
+<!-- Recipe controls -->
+<div class="filter-bar" id="recipe-filter-bar">
+  <button type="button" class="filter-btn active" data-filter="all" onclick="setRecipeFilter('all')">All</button>
+  <button type="button" class="filter-btn" data-filter="bread" onclick="setRecipeFilter('bread')">Bread</button>
+  <button type="button" class="filter-btn" data-filter="soup" onclick="setRecipeFilter('soup')">Soup</button>
+  <button type="button" class="filter-btn" data-filter="pasta" onclick="setRecipeFilter('pasta')">Pasta</button>
+  <button type="button" class="filter-btn" data-filter="meat" onclick="setRecipeFilter('meat')">Meat</button>
+  <button type="button" class="filter-btn" data-filter="fish" onclick="setRecipeFilter('fish')">Fish</button>
+  <button type="button" class="filter-btn" data-filter="curry" onclick="setRecipeFilter('curry')">Curry</button>
+  <button type="button" class="filter-btn" data-filter="baking" onclick="setRecipeFilter('baking')">Baking</button>
 </div>
-
-<div class="search-bar">
+<div class="search-bar" id="recipe-search-bar">
   <input class="search-input" type="text" placeholder="Search recipes or ingredients…" id="search-input" oninput="onSearch()" />
   <select class="sort-select" id="sort-select" title="Sort recipes" aria-label="Sort recipes" onchange="onSortChange()">
     <option value="name">Sort: Name (A–Z)</option>
@@ -219,14 +351,29 @@
     <option value="date-asc">Sort: Date added (oldest)</option>
   </select>
 </div>
-
 <div id="status"></div>
+
+<!-- Cocktail controls -->
+<div class="filter-bar hidden" id="cocktail-filter-bar">
+  <button class="filter-btn active" data-filter="available" onclick="setCocktailFilter('available')">Can make</button>
+  <button class="filter-btn" data-filter="all" onclick="setCocktailFilter('all')">All</button>
+  <button class="filter-btn" data-filter="stirred" onclick="setCocktailFilter('stirred')">Stirred</button>
+  <button class="filter-btn" data-filter="shaken" onclick="setCocktailFilter('shaken')">Shaken</button>
+  <button class="filter-btn" data-filter="built" onclick="setCocktailFilter('built')">Built</button>
+</div>
+<div id="inventory-status" class="hidden">
+  <span id="inventory-text">Loading inventory…</span>
+  <a href="/cocktails/ingredients.md" target="_blank">Edit ingredients ↗</a>
+</div>
 
 <div id="loading">Loading…</div>
 
 <div class="main hidden" id="main">
-  <div class="recipe-list" id="recipe-list"></div>
-  <div class="detail-panel" id="detail-panel">
+  <div class="left-panel" id="left-panel">
+    <div id="recipe-list"></div>
+    <div id="cocktail-list" class="hidden"></div>
+  </div>
+  <div class="right-panel" id="right-panel">
     <div class="detail-empty">
       <div class="detail-empty-icon">◎</div>
       <div class="detail-empty-text">Select a recipe</div>
@@ -235,6 +382,41 @@
 </div>
 
 <script>
+// ─── Mode ─────────────────────────────────────────────────────────────────────
+let currentMode = location.hash === '#cocktails' ? 'cocktails' : 'recipes';
+
+function setMode(mode) {
+  currentMode = mode;
+  history.replaceState(null, '', location.pathname + (mode === 'cocktails' ? '#cocktails' : ''));
+
+  document.querySelectorAll('.mode-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.mode === mode);
+  });
+
+  const c = mode === 'cocktails';
+  document.getElementById('recipe-filter-bar').classList.toggle('hidden', c);
+  document.getElementById('recipe-search-bar').classList.toggle('hidden', c);
+  document.getElementById('status').classList.toggle('hidden', c);
+  document.getElementById('cocktail-filter-bar').classList.toggle('hidden', !c);
+  document.getElementById('inventory-status').classList.toggle('hidden', !c);
+  document.getElementById('serves-toggle').classList.toggle('hidden', !c);
+  document.getElementById('recipe-list').classList.toggle('hidden', c);
+  document.getElementById('cocktail-list').classList.toggle('hidden', !c);
+  document.getElementById('page-title').textContent = c ? 'Cocktails' : 'Recipes';
+
+  selectedRecipeSlug = null;
+  selectedCocktailId = null;
+  document.getElementById('right-panel').innerHTML = `
+    <div class="detail-empty">
+      <div class="detail-empty-icon">◎</div>
+      <div class="detail-empty-text">Select a ${c ? 'cocktail' : 'recipe'}</div>
+    </div>
+  `;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// RECIPES
+// ═══════════════════════════════════════════════════════════════════════════════
 const MD_FILES = [
   'aussie-meat-pie',
   'basic-no-knead-bread',
@@ -282,7 +464,6 @@ const MD_FILES = [
   'vodka-marinated-steak',
 ];
 
-// Keyword-based category matching
 const CATEGORY_KEYWORDS = {
   bread:  ['bread', 'dough', 'barmbrack', 'tangzhong', 'gougere', 'pizza'],
   soup:   ['soup', 'laksa', 'chilli', 'colcannon'],
@@ -306,14 +487,11 @@ function recipeCategory(recipe) {
 }
 
 let RECIPES = [];
-let currentFilter = 'all';
+let recipeFilter = 'all';
 let searchQuery = '';
-let selectedSlug = null;
+let selectedRecipeSlug = null;
 let currentSort = 'name';
 
-// ─── Markdown + frontmatter parsing ────────────────────────────────────────────
-// Frontmatter values are written as JSON literals (json.dumps on the Python
-// side), so every value is valid YAML flow syntax AND directly JSON.parse-able.
 function parseFrontmatter(text) {
   const match = text.match(/^---\n([\s\S]*?)\n---\n?([\s\S]*)$/);
   if (!match) return { meta: {}, body: text };
@@ -337,7 +515,7 @@ function parseSections(body) {
   for (const line of body.split('\n')) {
     const h2 = line.match(/^##\s+(.*)/);
     if (h2) { current = h2[1].trim().toLowerCase(); sections[current] = []; continue; }
-    if (line.match(/^#\s+/)) continue; // title line
+    if (line.match(/^#\s+/)) continue;
     if (current) sections[current].push(line);
   }
   Object.keys(sections).forEach(k => {
@@ -369,16 +547,12 @@ function parseRecipeMarkdown(text, slug) {
     return bullet ? bullet[1] : line;
   }).filter(l => l.trim() !== '');
 
-  const storage = (sections['storage'] || []).join(' ').trim();
-  const description = (sections['description'] || []).join(' ').trim();
-
   return {
     recipe_name: meta.recipe_name || '',
     metadata: {
       rating: meta.rating ?? null,
       categories: meta.categories || [],
       tags: meta.tags || [],
-      source_file: meta.source_file ?? null,
       date_added: meta.date_added ?? null,
       source_url: meta.source_url ?? null,
       author: meta.author ?? null,
@@ -386,52 +560,18 @@ function parseRecipeMarkdown(text, slug) {
       servings: meta.servings ?? null,
       prep_time: meta.prep_time ?? null,
       cook_time: meta.cook_time ?? null,
-      total_time: meta.total_time ?? null,
     },
-    nutrition: meta.nutrition || {},
     ingredients_summary: ingredients,
     directions,
     notes,
-    storage,
-    description,
+    storage: (sections['storage'] || []).join(' ').trim(),
     slug,
   };
 }
 
-// ─── Load data ────────────────────────────────────────────────────────────────
-async function init() {
-  try {
-    const results = await Promise.all(
-      MD_FILES.map(slug =>
-        fetch(`/recipes/${slug}.md`)
-          .then(r => r.ok ? r.text() : null)
-          .then(text => text ? parseRecipeMarkdown(text, slug) : null)
-          .catch(() => null)
-      )
-    );
-
-    RECIPES = results
-      .filter(Boolean)
-      .sort((a, b) => a.recipe_name.localeCompare(b.recipe_name));
-
-    document.getElementById('loading').classList.add('hidden');
-    document.getElementById('main').classList.remove('hidden');
-
-    renderList();
-  } catch(e) {
-    document.getElementById('loading').textContent = 'Error loading recipes — check console';
-    console.error(e);
-  }
-}
-
-// ─── Filter & search ──────────────────────────────────────────────────────────
-function getFiltered() {
+function getFilteredRecipes() {
   let list = RECIPES;
-
-  if (currentFilter !== 'all') {
-    list = list.filter(r => recipeCategory(r) === currentFilter);
-  }
-
+  if (recipeFilter !== 'all') list = list.filter(r => recipeCategory(r) === recipeFilter);
   if (searchQuery) {
     const q = searchQuery.toLowerCase();
     list = list.filter(r =>
@@ -439,7 +579,6 @@ function getFiltered() {
       r.ingredients_summary.some(i => i.toLowerCase().includes(q))
     );
   }
-
   list = list.slice();
   if (currentSort === 'date-desc') {
     list.sort((a, b) =>
@@ -454,18 +593,14 @@ function getFiltered() {
   } else {
     list.sort((a, b) => a.recipe_name.localeCompare(b.recipe_name));
   }
-
   return list;
 }
 
-// ─── Render list ──────────────────────────────────────────────────────────────
-function renderList() {
-  const filtered = getFiltered();
+function renderRecipeList() {
+  const filtered = getFilteredRecipes();
   const list = document.getElementById('recipe-list');
   list.innerHTML = '';
-
-  document.getElementById('status').textContent =
-    `${filtered.length} of ${RECIPES.length} recipes`;
+  document.getElementById('status').textContent = `${filtered.length} of ${RECIPES.length} recipes`;
 
   if (filtered.length === 0) {
     list.innerHTML = `<div style="padding:2rem;color:var(--fg-muted);font-size:0.75rem;text-align:center">No recipes match</div>`;
@@ -474,16 +609,13 @@ function renderList() {
 
   filtered.forEach(recipe => {
     const item = document.createElement('div');
-    item.className = `recipe-item${selectedSlug === recipe.slug ? ' active' : ''}`;
+    item.className = `recipe-item${selectedRecipeSlug === recipe.slug ? ' active' : ''}`;
     item.dataset.slug = recipe.slug;
 
     const ingredientCount = recipe.ingredients_summary.filter(i =>
       !i.toUpperCase().includes('FOR THE') && !i.toUpperCase().startsWith('FOR ')
     ).length;
-
-    const thumbPath = recipe.metadata?.image
-      ? `/recipes/${recipe.metadata.image}`
-      : null;
+    const thumbPath = recipe.metadata?.image ? `/recipes/${recipe.metadata.image}` : null;
 
     item.innerHTML = `
       <div class="recipe-info">
@@ -494,48 +626,35 @@ function renderList() {
         : `<div class="recipe-count">${ingredientCount} ingr.</div>`
       }
     `;
-
     item.addEventListener('click', () => selectRecipe(recipe.slug));
     list.appendChild(item);
   });
 }
 
-// ─── Select recipe ────────────────────────────────────────────────────────────
 function selectRecipe(slug) {
-  selectedSlug = slug;
+  selectedRecipeSlug = slug;
   const recipe = RECIPES.find(r => r.slug === slug);
   if (!recipe) return;
-
   document.querySelectorAll('.recipe-item').forEach(el => {
     el.classList.toggle('active', el.dataset.slug === slug);
   });
-
-  renderDetail(recipe);
-
-  // Mobile: show detail panel
-  document.getElementById('detail-panel').classList.add('visible');
+  renderRecipeDetail(recipe);
+  document.getElementById('right-panel').classList.add('visible');
 }
 
-function renderDetail(recipe) {
-  const imagePath = recipe.metadata?.image
-    ? `/recipes/${recipe.metadata.image}`
-    : null;
+function renderRecipeDetail(recipe) {
+  const imagePath = recipe.metadata?.image ? `/recipes/${recipe.metadata.image}` : null;
   const sourceUrl = recipe.metadata?.source_url || null;
   const author = recipe.metadata?.author || null;
-  const servings = recipe.metadata?.servings || null;
-  const cookTime = recipe.metadata?.cook_time || null;
-  const prepTime = recipe.metadata?.prep_time || null;
-
   const metaParts = [];
-  if (servings) metaParts.push(servings);
-  if (prepTime) metaParts.push(`Prep ${prepTime}`);
-  if (cookTime) metaParts.push(`Cook ${cookTime}`);
+  if (recipe.metadata?.servings) metaParts.push(recipe.metadata.servings);
+  if (recipe.metadata?.prep_time) metaParts.push(`Prep ${recipe.metadata.prep_time}`);
+  if (recipe.metadata?.cook_time) metaParts.push(`Cook ${recipe.metadata.cook_time}`);
   if (author && sourceUrl) metaParts.push(`<a href="${sourceUrl}" target="_blank">${author} ↗</a>`);
   else if (author) metaParts.push(author);
 
   const ingredientHTML = recipe.ingredients_summary.map(ing => {
-    const isHeader = /^(FOR |for the |FOR THE )/i.test(ing.trim());
-    if (isHeader) {
+    if (/^(FOR |for the |FOR THE )/i.test(ing.trim())) {
       return `<li class="ingredient-item section-header">${ing.replace(/:$/, '')}</li>`;
     }
     return `<li class="ingredient-item">${ing}</li>`;
@@ -544,41 +663,33 @@ function renderDetail(recipe) {
   const directionHTML = recipe.directions.map((step, i) => `
     <li class="direction-item">
       <span class="direction-num">${String(i + 1).padStart(2, '0')}.</span>
-      <span class="direction-text">${step}</span>
+      <span>${step}</span>
     </li>
   `).join('');
 
-  const hasStorage = recipe.storage && recipe.storage.trim().length > 0;
-  const hasNotes = recipe.notes && recipe.notes.length > 0;
-
-  document.getElementById('detail-panel').innerHTML = `
+  document.getElementById('right-panel').innerHTML = `
     ${imagePath ? `<img class="detail-image" src="${imagePath}" alt="${recipe.recipe_name}" loading="lazy">` : ''}
-
     <div>
       <div class="detail-name">${recipe.recipe_name}</div>
       ${metaParts.length > 0 ? `<div class="detail-meta">${metaParts.join(' · ')}</div>` : ''}
     </div>
-
     <div>
       <div class="section-label">Ingredients</div>
       <ul class="ingredient-list">${ingredientHTML}</ul>
     </div>
-
     ${recipe.directions.length > 0 ? `
     <div>
       <div class="section-label">Method</div>
       <ol class="directions-list">${directionHTML}</ol>
     </div>
     ` : ''}
-
-    ${hasNotes ? `
+    ${recipe.notes?.length > 0 ? `
     <div>
       <div class="section-label">Notes</div>
       <p class="notes-text">${recipe.notes.join(' ')}</p>
     </div>
     ` : ''}
-
-    ${hasStorage ? `
+    ${recipe.storage ? `
     <div>
       <div class="section-label">Storage</div>
       <p class="notes-text">${recipe.storage}</p>
@@ -587,26 +698,214 @@ function renderDetail(recipe) {
   `;
 }
 
-// ─── Controls ─────────────────────────────────────────────────────────────────
-function setFilter(filter) {
-  currentFilter = filter;
-  document.querySelectorAll('.filter-btn').forEach(btn => {
+function setRecipeFilter(filter) {
+  recipeFilter = filter;
+  document.querySelectorAll('#recipe-filter-bar .filter-btn').forEach(btn => {
     btn.classList.toggle('active', btn.dataset.filter === filter);
   });
-  renderList();
+  renderRecipeList();
 }
 
 function onSearch() {
   searchQuery = document.getElementById('search-input').value.trim();
-  renderList();
+  renderRecipeList();
 }
 
 function onSortChange() {
   currentSort = document.getElementById('sort-select').value;
-  renderList();
+  renderRecipeList();
 }
 
-// ─── Init ─────────────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════════
+// COCKTAILS
+// ═══════════════════════════════════════════════════════════════════════════════
+let COCKTAILS = [];
+let INGREDIENTS = new Set();
+let currentServes = 1;
+let cocktailFilter = 'available';
+let selectedCocktailId = null;
+
+function parseIngredients(md) {
+  INGREDIENTS.clear();
+  for (const line of md.split('\n')) {
+    const trimmed = line.replace(/^[-*]\s+/, '').trim().toLowerCase();
+    if (trimmed && !trimmed.startsWith('#') && trimmed.length > 1) {
+      INGREDIENTS.add(trimmed);
+    }
+  }
+}
+
+function hasIngredient(name) {
+  const n = name.toLowerCase();
+  if (INGREDIENTS.has(n)) return true;
+  for (const ing of INGREDIENTS) {
+    if (n.includes(ing) || ing.includes(n)) return true;
+  }
+  return false;
+}
+
+function canMake(cocktail) {
+  return cocktail.ingredients.every(i => hasIngredient(i.name));
+}
+
+function getMissing(cocktail) {
+  return cocktail.ingredients.filter(i => !hasIngredient(i.name));
+}
+
+function formatAmount(amount, unit, serves) {
+  const scaled = amount * serves;
+  if (unit === 'ml') return `${scaled % 1 === 0 ? scaled : scaled.toFixed(1)}ml`;
+  if (unit === 'dash' || unit === 'dashes') return `${scaled} ${scaled === 1 ? 'dash' : 'dashes'}`;
+  if (unit === 'leaves') return `${scaled} leaves`;
+  return `${scaled}${unit}`;
+}
+
+function renderCocktailList() {
+  const list = document.getElementById('cocktail-list');
+  list.innerHTML = '';
+
+  let filtered = COCKTAILS;
+  if (cocktailFilter === 'available') filtered = COCKTAILS.filter(c => canMake(c));
+  else if (cocktailFilter === 'stirred') filtered = COCKTAILS.filter(c => c.style === 'stirred');
+  else if (cocktailFilter === 'shaken') filtered = COCKTAILS.filter(c => c.style === 'straight-up' || c.style === 'on-the-rocks');
+  else if (cocktailFilter === 'built') filtered = COCKTAILS.filter(c => c.style === 'built');
+
+  if (filtered.length === 0) {
+    list.innerHTML = `<div style="padding:2rem;color:var(--fg-muted);font-size:0.75rem;text-align:center">No cocktails match current filter</div>`;
+    return;
+  }
+
+  filtered.forEach(cocktail => {
+    const available = canMake(cocktail);
+    const missing = getMissing(cocktail);
+    const item = document.createElement('div');
+    item.className = `cocktail-item${available ? '' : ' unavailable'}${selectedCocktailId === cocktail.id ? ' active' : ''}`;
+    item.dataset.id = cocktail.id;
+    item.innerHTML = `
+      <div>
+        <div class="cocktail-name">${cocktail.name}</div>
+        <div class="cocktail-meta">${cocktail.glass} · ${cocktail.style.replace(/-/g, ' ')}</div>
+      </div>
+      <div class="cocktail-badges">
+        ${!available ? `<span class="badge missing">${missing.length} missing</span>` : ''}
+      </div>
+    `;
+    if (available) item.addEventListener('click', () => selectCocktail(cocktail.id));
+    list.appendChild(item);
+  });
+}
+
+function selectCocktail(id) {
+  selectedCocktailId = id;
+  const cocktail = COCKTAILS.find(c => c.id === id);
+  if (!cocktail) return;
+  document.querySelectorAll('.cocktail-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.id === id);
+  });
+  renderCocktailDetail(cocktail);
+  document.getElementById('right-panel').classList.add('visible');
+}
+
+function renderCocktailDetail(cocktail) {
+  const missing = getMissing(cocktail);
+  document.getElementById('right-panel').innerHTML = `
+    <div>
+      <div class="detail-name">${cocktail.name}</div>
+      <div class="detail-meta">
+        <span>${cocktail.glass}</span>
+        <span>${cocktail.style.replace(/-/g, ' ')}</span>
+        ${cocktail.garnish ? `<span>Garnish: ${cocktail.garnish}</span>` : ''}
+      </div>
+    </div>
+    <div>
+      <div class="section-label">Ingredients</div>
+      <ul class="ingredient-list">
+        ${cocktail.ingredients.map(i => `
+          <li class="ingredient-item${hasIngredient(i.name) ? '' : ' missing'}">
+            <span class="ing-amount">${formatAmount(i.amount, i.unit, currentServes)}</span>
+            ${i.name}
+          </li>
+        `).join('')}
+      </ul>
+    </div>
+    <div>
+      <div class="section-label">Method</div>
+      <p class="method-text">${cocktail.method}</p>
+    </div>
+    ${cocktail.notes ? `
+    <div>
+      <div class="section-label">Notes</div>
+      <p class="notes-text">${cocktail.notes}</p>
+    </div>
+    ` : ''}
+    ${missing.length > 0 ? `
+    <div>
+      <div class="section-label">Missing</div>
+      <div>${missing.map(i => `<span class="missing-tag">${i.name}</span>`).join('')}</div>
+    </div>
+    ` : ''}
+  `;
+}
+
+function setCocktailFilter(filter) {
+  cocktailFilter = filter;
+  document.querySelectorAll('#cocktail-filter-bar .filter-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.filter === filter);
+  });
+  renderCocktailList();
+}
+
+function setServes(n) {
+  currentServes = n;
+  document.querySelectorAll('.serves-btn').forEach(btn => {
+    btn.classList.toggle('active', parseInt(btn.dataset.serves) === n);
+  });
+  if (selectedCocktailId) {
+    const cocktail = COCKTAILS.find(c => c.id === selectedCocktailId);
+    if (cocktail) renderCocktailDetail(cocktail);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════════════════════
+async function init() {
+  try {
+    const [cocktailsRes, ingredientsRes, ...recipeTexts] = await Promise.all([
+      fetch('/cocktails/cocktails.json'),
+      fetch('/cocktails/ingredients.md'),
+      ...MD_FILES.map(slug =>
+        fetch(`/recipes/${slug}.md`)
+          .then(r => r.ok ? r.text() : null)
+          .catch(() => null)
+      )
+    ]);
+
+    COCKTAILS = await cocktailsRes.json();
+    parseIngredients(await ingredientsRes.text());
+
+    RECIPES = recipeTexts
+      .map((text, i) => text ? parseRecipeMarkdown(text, MD_FILES[i]) : null)
+      .filter(Boolean)
+      .sort((a, b) => a.recipe_name.localeCompare(b.recipe_name));
+
+    const available = COCKTAILS.filter(c => canMake(c)).length;
+    document.getElementById('inventory-text').textContent =
+      `${INGREDIENTS.size} ingredients on hand · ${available} of ${COCKTAILS.length} cocktails available`;
+
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('main').classList.remove('hidden');
+
+    renderRecipeList();
+    renderCocktailList();
+
+    if (currentMode === 'cocktails') setMode('cocktails');
+  } catch(e) {
+    document.getElementById('loading').textContent = 'Error loading data — check console';
+    console.error(e);
+  }
+}
+
 init();
 </script>
 </body>
