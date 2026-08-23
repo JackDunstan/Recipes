@@ -719,6 +719,63 @@ function onSortChange() {
 // ═══════════════════════════════════════════════════════════════════════════════
 // COCKTAILS
 // ═══════════════════════════════════════════════════════════════════════════════
+const COCKTAIL_FILES = [
+  'margarita-straight-up',
+  'margarita-rocks',
+  'negroni',
+  'kingston-negroni',
+  'boulevardier',
+  'paper-plane',
+  'last-word',
+  'vesper',
+  'old-fashioned',
+  'sidecar',
+  'white-lady',
+  'manhattan',
+  'black-manhattan',
+  'mai-tai',
+  'jungle-bird',
+  'mezcal-negroni',
+  'french-75',
+  'sazerac',
+  'corpse-reviver-2',
+  'mojito',
+];
+
+function parseCocktailMarkdown(text, slug) {
+  const { meta, body } = parseFrontmatter(text);
+  const sections = parseSections(body);
+
+  const ingredients = (sections['ingredients'] || [])
+    .map(line => {
+      const bullet = line.match(/^-\s+(.*)/);
+      return bullet ? bullet[1] : line;
+    })
+    .filter(l => l.trim() !== '')
+    .map(line => {
+      let m = line.match(/^(\d+(?:\.\d+)?)(ml)\s+(.+)$/);
+      if (m) return { amount: parseFloat(m[1]), unit: m[2], name: m[3] };
+      m = line.match(/^(\d+(?:\.\d+)?)\s+(dashes?|leaves?)\s+(.+)$/);
+      if (m) return { amount: parseFloat(m[1]), unit: m[2], name: m[3] };
+      return null;
+    })
+    .filter(Boolean);
+
+  const methodLines = (sections['method'] || []).filter(l => l.trim() !== '');
+  const notesLines = (sections['notes'] || []).filter(l => l.trim() !== '');
+
+  return {
+    id: slug,
+    name: meta.cocktail_name || '',
+    style: meta.style || '',
+    glass: meta.glass || '',
+    garnish: meta.garnish || '',
+    ingredients,
+    method: methodLines.join(' '),
+    notes: notesLines.join(' '),
+  };
+}
+
 let COCKTAILS = [];
 let INGREDIENTS = new Set();
 let currentServes = 1;
@@ -871,9 +928,13 @@ function setServes(n) {
 // ═══════════════════════════════════════════════════════════════════════════════
 async function init() {
   try {
-    const [cocktailsRes, ingredientsRes, ...recipeTexts] = await Promise.all([
-      fetch('/cocktails/cocktails.json'),
+    const [ingredientsRes, ...allTexts] = await Promise.all([
       fetch('/cocktails/ingredients.md'),
+      ...COCKTAIL_FILES.map(slug =>
+        fetch(`/cocktails/${slug}.md`)
+          .then(r => r.ok ? r.text() : null)
+          .catch(() => null)
+      ),
       ...MD_FILES.map(slug =>
         fetch(`/recipes/${slug}.md`)
           .then(r => r.ok ? r.text() : null)
@@ -881,8 +942,14 @@ async function init() {
       )
     ]);
 
-    COCKTAILS = await cocktailsRes.json();
     parseIngredients(await ingredientsRes.text());
+
+    const cocktailTexts = allTexts.slice(0, COCKTAIL_FILES.length);
+    const recipeTexts = allTexts.slice(COCKTAIL_FILES.length);
+
+    COCKTAILS = cocktailTexts
+      .map((text, i) => text ? parseCocktailMarkdown(text, COCKTAIL_FILES[i]) : null)
+      .filter(Boolean);
 
     RECIPES = recipeTexts
       .map((text, i) => text ? parseRecipeMarkdown(text, MD_FILES[i]) : null)
