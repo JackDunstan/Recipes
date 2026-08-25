@@ -402,19 +402,262 @@ document.getElementById('search').addEventListener('input', e => {
   renderGrid();
 });
 
+<<<<<<< HEAD
 // Init
 async function init() {
   try {
     const texts = await Promise.all(
       MD_FILES.map(slug =>
         fetch(`./${slug}.md`)
+=======
+function onSortChange() {
+  currentSort = document.getElementById('sort-select').value;
+  renderRecipeList();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// COCKTAILS
+// ═══════════════════════════════════════════════════════════════════════════════
+const COCKTAIL_FILES = [
+  'margarita-straight-up',
+  'margarita-rocks',
+  'negroni',
+  'kingston-negroni',
+  'boulevardier',
+  'paper-plane',
+  'last-word',
+  'vesper',
+  'old-fashioned',
+  'sidecar',
+  'white-lady',
+  'manhattan',
+  'black-manhattan',
+  'mai-tai',
+  'jungle-bird',
+  'mezcal-negroni',
+  'french-75',
+  'sazerac',
+  'corpse-reviver-2',
+  'mojito',
+];
+
+function parseCocktailMarkdown(text, slug) {
+  const { meta, body } = parseFrontmatter(text);
+  const sections = parseSections(body);
+
+  const ingredients = (sections['ingredients'] || [])
+    .map(line => {
+      const bullet = line.match(/^-\s+(.*)/);
+      return bullet ? bullet[1] : line;
+    })
+    .filter(l => l.trim() !== '')
+    .map(line => {
+      let m = line.match(/^(\d+(?:\.\d+)?)(ml)\s+(.+)$/);
+      if (m) return { amount: parseFloat(m[1]), unit: m[2], name: m[3] };
+      m = line.match(/^(\d+(?:\.\d+)?)\s+(dashes?|leaves?)\s+(.+)$/);
+      if (m) return { amount: parseFloat(m[1]), unit: m[2], name: m[3] };
+      return null;
+    })
+    .filter(Boolean);
+
+  const methodLines = (sections['method'] || []).filter(l => l.trim() !== '');
+  const notesLines = (sections['notes'] || []).filter(l => l.trim() !== '');
+
+  return {
+    id: slug,
+    name: meta.cocktail_name || '',
+    style: meta.style || '',
+    glass: meta.glass || '',
+    garnish: meta.garnish || '',
+    ingredients,
+    method: methodLines.join(' '),
+    notes: notesLines.join(' '),
+  };
+}
+
+let COCKTAILS = [];
+let INGREDIENTS = new Set();
+let currentServes = 1;
+let cocktailFilter = 'available';
+let selectedCocktailId = null;
+
+function parseIngredients(md) {
+  INGREDIENTS.clear();
+  for (const line of md.split('\n')) {
+    const trimmed = line.replace(/^[-*]\s+/, '').trim().toLowerCase();
+    if (trimmed && !trimmed.startsWith('#') && trimmed.length > 1) {
+      INGREDIENTS.add(trimmed);
+    }
+  }
+}
+
+function hasIngredient(name) {
+  const n = name.toLowerCase();
+  if (INGREDIENTS.has(n)) return true;
+  for (const ing of INGREDIENTS) {
+    if (n.includes(ing) || ing.includes(n)) return true;
+  }
+  return false;
+}
+
+function canMake(cocktail) {
+  return cocktail.ingredients.every(i => hasIngredient(i.name));
+}
+
+function getMissing(cocktail) {
+  return cocktail.ingredients.filter(i => !hasIngredient(i.name));
+}
+
+function formatAmount(amount, unit, serves) {
+  const scaled = amount * serves;
+  if (unit === 'ml') return `${scaled % 1 === 0 ? scaled : scaled.toFixed(1)}ml`;
+  if (unit === 'dash' || unit === 'dashes') return `${scaled} ${scaled === 1 ? 'dash' : 'dashes'}`;
+  if (unit === 'leaves') return `${scaled} leaves`;
+  return `${scaled}${unit}`;
+}
+
+function renderCocktailList() {
+  const list = document.getElementById('cocktail-list');
+  list.innerHTML = '';
+
+  let filtered = COCKTAILS;
+  if (cocktailFilter === 'available') filtered = COCKTAILS.filter(c => canMake(c));
+  else if (cocktailFilter === 'stirred') filtered = COCKTAILS.filter(c => c.style === 'stirred');
+  else if (cocktailFilter === 'shaken') filtered = COCKTAILS.filter(c => c.style === 'straight-up' || c.style === 'on-the-rocks');
+  else if (cocktailFilter === 'built') filtered = COCKTAILS.filter(c => c.style === 'built');
+
+  if (filtered.length === 0) {
+    list.innerHTML = `<div style="padding:2rem;color:var(--fg-muted);font-size:0.75rem;text-align:center">No cocktails match current filter</div>`;
+    return;
+  }
+
+  filtered.forEach(cocktail => {
+    const available = canMake(cocktail);
+    const missing = getMissing(cocktail);
+    const item = document.createElement('div');
+    item.className = `cocktail-item${available ? '' : ' unavailable'}${selectedCocktailId === cocktail.id ? ' active' : ''}`;
+    item.dataset.id = cocktail.id;
+    item.innerHTML = `
+      <div>
+        <div class="cocktail-name">${cocktail.name}</div>
+        <div class="cocktail-meta">${cocktail.glass} · ${cocktail.style.replace(/-/g, ' ')}</div>
+      </div>
+      <div class="cocktail-badges">
+        ${!available ? `<span class="badge missing">${missing.length} missing</span>` : ''}
+      </div>
+    `;
+    if (available) item.addEventListener('click', () => selectCocktail(cocktail.id));
+    list.appendChild(item);
+  });
+}
+
+function selectCocktail(id) {
+  selectedCocktailId = id;
+  const cocktail = COCKTAILS.find(c => c.id === id);
+  if (!cocktail) return;
+  document.querySelectorAll('.cocktail-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.id === id);
+  });
+  renderCocktailDetail(cocktail);
+  document.getElementById('right-panel').classList.add('visible');
+}
+
+function renderCocktailDetail(cocktail) {
+  const missing = getMissing(cocktail);
+  document.getElementById('right-panel').innerHTML = `
+    <div>
+      <div class="detail-name">${cocktail.name}</div>
+      <div class="detail-meta">
+        <span>${cocktail.glass}</span>
+        <span>${cocktail.style.replace(/-/g, ' ')}</span>
+        ${cocktail.garnish ? `<span>Garnish: ${cocktail.garnish}</span>` : ''}
+      </div>
+    </div>
+    <div>
+      <div class="section-label">Ingredients</div>
+      <ul class="ingredient-list">
+        ${cocktail.ingredients.map(i => `
+          <li class="ingredient-item${hasIngredient(i.name) ? '' : ' missing'}">
+            <span class="ing-amount">${formatAmount(i.amount, i.unit, currentServes)}</span>
+            ${i.name}
+          </li>
+        `).join('')}
+      </ul>
+    </div>
+    <div>
+      <div class="section-label">Method</div>
+      <p class="method-text">${cocktail.method}</p>
+    </div>
+    ${cocktail.notes ? `
+    <div>
+      <div class="section-label">Notes</div>
+      <p class="notes-text">${cocktail.notes}</p>
+    </div>
+    ` : ''}
+    ${missing.length > 0 ? `
+    <div>
+      <div class="section-label">Missing</div>
+      <div>${missing.map(i => `<span class="missing-tag">${i.name}</span>`).join('')}</div>
+    </div>
+    ` : ''}
+  `;
+}
+
+function setCocktailFilter(filter) {
+  cocktailFilter = filter;
+  document.querySelectorAll('#cocktail-filter-bar .filter-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.filter === filter);
+  });
+  renderCocktailList();
+}
+
+function setServes(n) {
+  currentServes = n;
+  document.querySelectorAll('.serves-btn').forEach(btn => {
+    btn.classList.toggle('active', parseInt(btn.dataset.serves) === n);
+  });
+  if (selectedCocktailId) {
+    const cocktail = COCKTAILS.find(c => c.id === selectedCocktailId);
+    if (cocktail) renderCocktailDetail(cocktail);
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════════════════════════════
+async function init() {
+  try {
+    const [ingredientsRes, ...allTexts] = await Promise.all([
+      fetch('/cocktails/ingredients.md'),
+      ...COCKTAIL_FILES.map(slug =>
+        fetch(`/cocktails/${slug}.md`)
+          .then(r => r.ok ? r.text() : null)
+          .catch(() => null)
+      ),
+      ...MD_FILES.map(slug =>
+        fetch(`/recipes/${slug}.md`)
+>>>>>>> 34124d156ee83c6de071f83394938c895ae443bc
           .then(r => r.ok ? r.text() : null)
           .catch(() => null)
       )
     );
 
+<<<<<<< HEAD
     ALL_RECIPES = texts
       .map((text, i) => text ? parseRecipe(text, MD_FILES[i]) : null)
+=======
+    parseIngredients(await ingredientsRes.text());
+
+    const cocktailTexts = allTexts.slice(0, COCKTAIL_FILES.length);
+    const recipeTexts = allTexts.slice(COCKTAIL_FILES.length);
+
+    COCKTAILS = cocktailTexts
+      .map((text, i) => text ? parseCocktailMarkdown(text, COCKTAIL_FILES[i]) : null)
+      .filter(Boolean);
+
+    RECIPES = recipeTexts
+      .map((text, i) => text ? parseRecipeMarkdown(text, MD_FILES[i]) : null)
+>>>>>>> 34124d156ee83c6de071f83394938c895ae443bc
       .filter(Boolean)
       .sort((a, b) => a.name.localeCompare(b.name));
 
