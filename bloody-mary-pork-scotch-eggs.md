@@ -21,13 +21,13 @@ nutrition: {}
 
 - 6 eggs
 - rice bran or vegetable oil for deep-frying
-- Tomato Tabasco relish
+**Tomato Tabasco relish**
 - 250g tinned cherry tomatoes
 - 30ml vodka
 - 2 tsp worcestershire sauce
 - 1 tsp Tabasco
 - 1 clove garlic, crushed
-- Egg wrap
+**Egg wrap**
 - ½ tbsp olive oil
 - 5 rashers bacon, finely chopped
 - 1 red onion, finely chopped
@@ -36,7 +36,7 @@ nutrition: {}
 - 1 tsp ground celery seeds
 - 1 garlic clove, crushed
 - 1½ tbsp tomato paste
-- Coating
+**Coating**
 - 1 cup flour
 - 1 egg
 - ¼ cup milk

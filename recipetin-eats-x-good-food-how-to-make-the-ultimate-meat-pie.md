@@ -19,15 +19,15 @@ nutrition: {}
 
 ## Ingredients
 
-- Shortcrust pie base
+**Shortcrust pie base**
 - 275g plain flour
 - ¾ tsp salt
 - 150g unsalted butter, cold, cut into 1cm cubes
 - 4½ tbsp ice cold water (plus more as needed)
-- Pie lid
+**Pie lid**
 - 3 frozen puff pastry sheets, just thawed (300g)
 - 1 egg, lightly whisked
-- Filling
+**Filling**
 - 1.25kg beef chuck cut into 2.5cm cubes
 - ½ tsp salt
 - ½ tsp pepper

@@ -19,7 +19,7 @@ nutrition: {}
 
 ## Ingredients
 
-- The perfect barmbrack
+**The perfect barmbrack**
 - 200g currants
 - 200g sultanas
 - 300ml strong tea

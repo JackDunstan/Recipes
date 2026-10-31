@@ -37,7 +37,7 @@ nutrition: {}
 - Thick chips, to serve
 - Salad, to serve
 - Tomato sauce, to serve
-- Pastry
+**Pastry**
 - 375g plain flour
 - 1 Tbsp unsalted butter
 - 375ml boiling water

@@ -73,3 +73,22 @@ nutrition: {}
 ## 3. Adding or Editing Recipes
 
 New recipes can be added by dropping a new `.md` file (following the schema above) into this folder — either directly, or via Obsidian if this folder is synced as your vault's recipe location — then adding the file's slug (filename minus `.md`) to the `MD_FILES` array in `index.html`.
+
+## 4. Kitchen Inventory
+
+`ingredients.md` lists everything the recipes use, grouped by shelf. The app fetches it on every load:
+
+- `* Butter` means in stock.
+- `* Butter [x]` (or `[X]`) means usually stocked but currently out. Out-of-stock items make up the shopping list.
+- Duplicate names are combined without regard to case. If either duplicate is out of stock, the combined item is out of stock.
+
+Each ingredient line in a recipe is matched to inventory items by name, singular or plural, with the longest name winning (so "olive oil" is never also read as "oil"). Wording that doesn't contain the item name, such as "scallions" for Spring onions, is mapped in the `ALIASES` table at the top of `app.js`. Other rules:
+
+- Text in parentheses is ignored, except `(or …)`. A line containing "or" needs only one of its items; any other line needs all of them.
+- Lines marked optional or recommended, or ending "to serve", "for dusting" and similar (unless they say "plus extra"), are shown but not counted.
+- Water and ice are assumed available.
+- Lines that match nothing (such as `tangzhong`, which is its own recipe) are shown but not counted.
+
+When you add a recipe, open it in the app: any ingredient you stock that shows no "need" note when out of stock either needs adding to `ingredients.md` or needs an alias.
+
+Shopping-list ticks are saved only in the browser and do not change `ingredients.md`.

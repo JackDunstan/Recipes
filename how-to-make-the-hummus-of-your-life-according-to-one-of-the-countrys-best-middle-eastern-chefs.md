@@ -33,7 +33,7 @@ nutrition: {}
 - 30g lemon juice
 - 70g toum (make your own or buy it from a specialty grocer)
 - 50g olive oil (Wolfers uses Mount Zero)
-- Toum (garlic sauce)
+**Toum (garlic sauce)**
 - 2 whole head of garlic, cloves peeled (about 160g)
 - 2 tsp sea salt
 - Juice of 4 lemons
